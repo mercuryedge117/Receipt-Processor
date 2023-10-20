@@ -2,6 +2,7 @@ from django.core.cache import cache
 from django.views import View
 from django.http import JsonResponse
 import json, uuid
+from . import ReceiptUtil
 
 class ReceiptView(View):
 
@@ -14,11 +15,13 @@ class ReceiptView(View):
         try:
             data = request.body.decode()
             data_dict = json.loads(data)
-            
+
+            point = ReceiptUtil.process(data_dict)
             receipt_id = str(uuid.uuid4())
             
             receipt_dict = data_dict
             receipt_dict["id"] = receipt_id
+            receipt_dict["point"] = point
             
             global_dict[receipt_id] = receipt_dict
 
@@ -40,5 +43,7 @@ class ReceiptView(View):
 
         if receipt is None: 
             return JsonResponse({"error": "No receipt found for that id"}, status=404)
+        
+        point = receipt.get("point")
 
-        return JsonResponse({"receipt": receipt})
+        return JsonResponse({"point": point})
